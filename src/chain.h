@@ -5,7 +5,7 @@
 
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
-
+#include <chainparams.h>
 #include <arith_uint256.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
@@ -294,6 +294,14 @@ public:
         return *phashBlock;
     }
 
+    uint256 GetBlockPoWHash(bool isBCDBlock = false) const
+    {
+    	if ((nVersion & 0x40000000UL) && isBCDBlock)
+    		return GetBlockHeader().GetPoWHash(isBCDBlock);
+    	else
+    		return *phashBlock;
+    }
+	
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;
@@ -322,10 +330,11 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s, blockPoWhash=%s)",
             pprev, nHeight,
             hashMerkleRoot.ToString(),
-            GetBlockHash().ToString());
+            GetBlockHash().ToString(),
+            GetBlockPoWHash(nHeight >= Params().GetConsensus().BCDHeight).ToString());
     }
 
     //! Check whether this block index entry is valid up to the passed validity level.

@@ -85,6 +85,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
     result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    result.push_back(Pair("powhash", blockindex->GetBlockPoWHash(blockindex->nHeight >= Params().GetConsensus().BCDHeight).GetHex()));
     int confirmations = -1;
     // Only report confirmations if the block is on the main chain
     if (chainActive.Contains(blockindex))
@@ -115,6 +116,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     AssertLockHeld(cs_main);
     UniValue result(UniValue::VOBJ);
     result.pushKV("hash", blockindex->GetBlockHash().GetHex());
+    result.push_back(Pair("powhash", block.GetPoWHash(blockindex->nHeight >= Params().GetConsensus().BCDHeight).GetHex()));
     int confirmations = -1;
     // Only report confirmations if the block is on the main chain
     if (chainActive.Contains(blockindex))
@@ -1021,8 +1023,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"address\"     (string) bitcoin address\n"
+            "     \"addresses\" : [          (array of string) array of bitcoindiamond addresses\n"
+            "        \"address\"     (string) bitcoindiamond address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

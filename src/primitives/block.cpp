@@ -9,10 +9,19 @@
 #include <tinyformat.h>
 #include <utilstrencodings.h>
 #include <crypto/common.h>
+#include "versionbits.h"
 
 uint256 CBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
+}
+
+uint256 CBlockHeader::GetPoWHash(bool isBCDBlock) const
+{
+	if ((nVersion & VERSIONBITS_FORK_BCD)  && isBCDBlock)
+		return HashX13sm3(BEGIN(nVersion), END(nNonce));
+	else
+		return GetHash();
 }
 
 std::string CBlock::ToString() const

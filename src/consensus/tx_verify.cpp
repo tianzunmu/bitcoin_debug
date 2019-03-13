@@ -156,7 +156,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckForkVersion, bool fCheckDuplicateInputs)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -202,6 +202,14 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
 
+    if ( fCheckForkVersion && !tx.IsCoinBase() ){
+		if (tx.nVersion != CTransaction::CURRENT_VERSION_FORK ){
+			return state.DoS(10, false, REJECT_INVALID, "bad-tx-version");
+		}
+		if (tx.preBlockHash.IsNull()){
+			return state.DoS(10, false, REJECT_INVALID, "bad-tx-preblockhash");
+		}
+    }
     return true;
 }
 

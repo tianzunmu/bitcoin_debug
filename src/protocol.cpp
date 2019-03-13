@@ -7,6 +7,7 @@
 
 #include <util.h>
 #include <utilstrencodings.h>
+#include <consensus/consensus.h>
 
 #ifndef WIN32
 # include <arpa/inet.h>
@@ -41,8 +42,13 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
+bool IsBlockLike(const std::string &strCommand) {
+    return strCommand == NetMsgType::BLOCK ||
+           strCommand == NetMsgType::CMPCTBLOCK ||
+           strCommand == NetMsgType::BLOCKTXN;
+}
 } // namespace NetMsgType
-
+const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 1 * 1024 * 1024;
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
@@ -119,7 +125,7 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
     }
 
     // Message size
-    if (nMessageSize > MAX_SIZE)
+    if (IsOversized())
     {
         LogPrintf("CMessageHeader::IsValid(): (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand(), nMessageSize);
         return false;
@@ -128,6 +134,21 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
     return true;
 }
 
+bool CMessageHeader::IsOversized() const {
+    // If the message doesn't not contain a block content, check against
+    // MAX_PROTOCOL_MESSAGE_LENGTH.
+    if (nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH &&
+        !NetMsgType::IsBlockLike(GetCommand())) {
+        return true;
+    }
+
+    // Scale the maximum accepted size with the block size.
+    if (nMessageSize > MAX_BLOCK_SERIALIZED_SIZE) {
+        return true;
+    }
+
+    return false;
+}
 
 ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
     if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {

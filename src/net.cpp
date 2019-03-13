@@ -738,6 +738,15 @@ void CNode::copyStats(CNodeStats &stats)
 }
 #undef X
 
+static bool IsOversizedMessage(const CNetMessage &msg) {
+    if (!msg.in_data) {
+        // Header only, cannot be oversized.
+        return false;
+    }
+
+    return msg.hdr.IsOversized();
+}
+
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
     complete = false;
@@ -764,7 +773,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         if (handled < 0)
             return false;
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (IsOversizedMessage(msg)) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
@@ -1524,7 +1533,7 @@ static void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Bitcoin " + FormatFullVersion();
+        std::string strDesc = "Bitcoindiamond " + FormatFullVersion();
 
         do {
 #ifndef UPNPDISCOVER_SUCCESS

@@ -2718,6 +2718,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
+	txNew.preBlockHash = chainActive.Tip()->GetBlockHash();
     int nBytes;
     {
         std::set<CInputCoin> setCoins;
